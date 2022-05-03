@@ -14,8 +14,10 @@ import {
   projectRemoved,
 } from "./store/projectSlice";
 import { addUser } from "./store/userSlice";
+import * as actions from './store/api';
 
 const store = configureStore();
+
 
 // store.dispatch(addUser({ name: "user1" }));
 
@@ -85,7 +87,11 @@ const store = configureStore();
 //   console.log(getState())
 // })
 
-store.dispatch({
-  type: 'error',
-  payload: {message: "An error occured!"}
-})
+store.dispatch(actions.apiCallBegan({
+  url: '/bugs',
+  // method: "get",
+  // data: {},
+  onSuccess: "bugsReceived",
+  // onError: actions.apiCallFailed.type
+}));
+
