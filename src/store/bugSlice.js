@@ -2,8 +2,6 @@ import { createSlice, createSelector } from "@reduxjs/toolkit";
 import { apiCallBegan } from "./api";
 import moment from 'moment';
 
-let lastId = 0;
-
 const initialState = {
   bugs: [],
   loading: false,
@@ -11,17 +9,27 @@ const initialState = {
   lastFetch: null,
 };
 
+// command - event
+// command : instruction what needs to be done
+// event: what has happened
+// addBug (notion of a command) - bugAdded (notion of an event)
+
 const bugSlice = createSlice({
   name: "bugs",
   initialState: initialState,
   reducers: {
     bugAdded: (state, action) => {
-      state.bugs.push({
-        id: ++lastId,
-        description: action.payload.description,
-        resolved: false,
-      });
+      // state.bugs.push({
+      //   id: ++lastId,
+      //   description: action.payload.description,
+      //   resolved: false,
+      // });
+      state.bugs.push(action.payload);
+      // we dont need to generate id on the client side anymore
     },
+
+    // bugresolved (notion of an event)
+    // resolvedBug (notion of command)
     bugResolved: (state, action) => {
       const index = state.bugs.findIndex((bug) => bug.id === action.payload.id);
       state.bugs[index].resolved = true;
@@ -31,7 +39,7 @@ const bugSlice = createSlice({
       state.bugs.splice(index, 1);
     },
     bugsAssignedToUser: (state, action) => {
-      const { userId, bugId } = action.payload;
+      const { userId, id: bugId } = action.payload;
       const index = state.bugs.findIndex((bug) => bug.id === bugId);
       state.bugs[index].userId = userId;
     },
@@ -50,8 +58,20 @@ const bugSlice = createSlice({
   },
 });
 
-export const { bugAdded, bugResolved, bugsRemoved, bugsAssignedToUser, bugsReceived, bugsRequested, bugsRequestFailed } =
+//disopatch the actions that have a notion of command
+
+// reduce coupling
+// these are internal function of this app and should not be used in otehr moduels, so we wont export them
+const { 
+  bugAdded,               // addBug
+  bugResolved, 
+  bugsRemoved, 
+  bugsAssignedToUser, 
+  bugsReceived, 
+  bugsRequested, 
+  bugsRequestFailed } =
   bugSlice.actions;
+
 export default bugSlice.reducer;
 
 // Action creators
@@ -111,5 +131,35 @@ export const getBugsByUser = (userId) =>
     (state) => state.entities.bugs.bugs,
     (bugs) => bugs.filter((bug) => bug.userId === userId)
   );
+
+export const addBug = bug => apiCallBegan({
+  url,
+  method: 'post',   // post something tos erver
+  data: bug,        // will be inclided in the body of our request
+  onSuccess: bugAdded.type,
+})
+
+// url her is a bit different => baseUrl/bugs/id ==> baseUrl/bugs/1
+// put --> update the entire resource
+// patch --> update one or more property
+export const resolveBug = id => apiCallBegan({
+  url:url + '/' + id,
+  method: 'patch',   
+  data: {resolved: true},        
+  onSuccess: bugResolved.tyqpe,
+})
+
+// notion of a command
+export const assignBugToUser = (bugId, userId) => apiCallBegan({
+  url: url + '/' + bugId,
+  method: 'patch',
+  data: {userId},
+  onSuccess: bugsAssignedToUser.type
+
+})
+
+
+
+
 
 
