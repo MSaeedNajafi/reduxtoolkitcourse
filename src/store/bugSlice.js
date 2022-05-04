@@ -1,6 +1,7 @@
 import { createSlice, createSelector } from "@reduxjs/toolkit";
 import { apiCallBegan } from "./api";
 import moment from 'moment';
+import axios from "axios";
 
 const initialState = {
   bugs: [],
@@ -62,7 +63,7 @@ const bugSlice = createSlice({
 
 // reduce coupling
 // these are internal function of this app and should not be used in otehr moduels, so we wont export them
-const { 
+export const { 
   bugAdded,               // addBug
   bugResolved, 
   bugsRemoved, 
@@ -132,12 +133,38 @@ export const getBugsByUser = (userId) =>
     (bugs) => bugs.filter((bug) => bug.userId === userId)
   );
 
+// making an api call
+// promise resolved = dispatch(succes)
+// promise unresolved = dispatch(error)
+// we can do this using an API middleware
+// implement these steps more explicitly 
 export const addBug = bug => apiCallBegan({
   url,
   method: 'post',   // post something tos erver
   data: bug,        // will be inclided in the body of our request
   onSuccess: bugAdded.type,
 })
+
+// export const addBug = bug => async dispatch  => {
+//   const response = await axios.request({
+//     baseURL: 'http://localhost:9001/api', 
+//     url:  '/bugs',
+//     method: 'post',
+//     data: bug
+//   })
+//   dispatch(bugAdded(response.data))
+// }
+
+// export const addingBug = bug => {
+//   //make an api call
+//   try{  
+//     await axios.post(url, bug);
+//     dispatch(bugAdded(bug))
+//   }
+//   catch(error){
+//     dispatch({type: 'error'})
+//   }
+// }
 
 // url her is a bit different => baseUrl/bugs/id ==> baseUrl/bugs/1
 // put --> update the entire resource
@@ -155,8 +182,9 @@ export const assignBugToUser = (bugId, userId) => apiCallBegan({
   method: 'patch',
   data: {userId},
   onSuccess: bugsAssignedToUser.type
-
 })
+
+
 
 
 

@@ -24,7 +24,7 @@ import * as actions from '../../store/api';
  * 
  * the api middleware should be able to handle this kind of action
  */
-
+//returns a promise since we are using async
 const api = ({dispatch, getState}) => next => async  action => {
 
     // check the type of action

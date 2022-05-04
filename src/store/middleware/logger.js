@@ -22,7 +22,9 @@ const logger = param => store => next => action => {
     // console.log('next', next)
     // console.log('action', action)
     // calling the next function adn passing the action 
-    next(action)
+    return next(action)
+    // logger > toast > api
+
 }
 
 export default logger

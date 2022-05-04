@@ -18,3 +18,13 @@ describe('isEven', ()=> {
 })
 
 
+// to test redux application
+// dispatch an action
+// check the store
+// we call thsi social test : 
+    // tests that involves multiple objext to work together 
+    // less fragile (they know a little or nothing about the imolimentation)
+    // cheaper to write
+    // cheaer to maintain
+    // more reliable
+
