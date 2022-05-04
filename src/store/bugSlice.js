@@ -1,9 +1,13 @@
 import { createSlice, createSelector } from "@reduxjs/toolkit";
+import { apiCallBegan } from "./api";
 
 let lastId = 0;
 
 const initialState = {
   bugs: [],
+  loading: false,
+  // usefull for cashing, 
+  lastFetch: null,
 };
 
 const bugSlice = createSlice({
@@ -25,20 +29,41 @@ const bugSlice = createSlice({
       const index = state.bugs.findIndex((bug) => bug.id === action.payload.id);
       state.bugs.splice(index, 1);
     },
-
     bugsAssignedToUser: (state, action) => {
       const { userId, bugId } = action.payload;
       const index = state.bugs.findIndex((bug) => bug.id === bugId);
       state.bugs[index].userId = userId;
     },
+    // name is bugs/bugsReceived
+    bugsReceived: (state, action) => {
+      state.bugs = action.payload;
+      state.loading =  false;
+    },
+    bugsRequested: (state, action) => {
+      state.loading = true;
+    },
+    bugsRequestFailed: (state, action) => {
+      state.loading = false;
+    }
   },
 });
 
-export const { bugAdded, bugResolved, bugsRemoved, bugsAssignedToUser } =
+export const { bugAdded, bugResolved, bugsRemoved, bugsAssignedToUser, bugsReceived, bugsRequested, bugsRequestFailed } =
   bugSlice.actions;
 export default bugSlice.reducer;
 
-//Memoization, so only if something hs changed
+// Action creators
+// fetch from api
+const url = '/bugs'
+export const loadBugs = () => apiCallBegan({
+  url,
+  onStart: bugsRequested.type,
+  onSuccess: bugsReceived.type,
+  onError: bugsRequestFailed.type,
+})
+//whithout extraction would be bugslice.actions.bugsReceived.type,
+
+// Memoization, so only if something hs changed
 export const getUnresolvedBugs = createSelector(
   (state) => state.entities.bugs.bugs,
   (bugs) => bugs.filter((bug) => !bug.resolved)
@@ -60,3 +85,5 @@ export const getBugsByUser = (userId) =>
     (state) => state.entities.bugs.bugs,
     (bugs) => bugs.filter((bug) => bug.userId === userId)
   );
+
+
