@@ -1,5 +1,6 @@
 import { createSlice, createSelector } from "@reduxjs/toolkit";
 import { apiCallBegan } from "./api";
+import moment from 'moment';
 
 let lastId = 0;
 
@@ -38,6 +39,7 @@ const bugSlice = createSlice({
     bugsReceived: (state, action) => {
       state.bugs = action.payload;
       state.loading =  false;
+      state.lastFetch = Date.now()
     },
     bugsRequested: (state, action) => {
       state.loading = true;
@@ -54,14 +56,38 @@ export default bugSlice.reducer;
 
 // Action creators
 // fetch from api
+
 const url = '/bugs'
-export const loadBugs = () => apiCallBegan({
-  url,
-  onStart: bugsRequested.type,
-  onSuccess: bugsReceived.type,
-  onError: bugsRequestFailed.type,
-})
+
+// () => {} returns the plain JS object
+// export const loadBugs = () => apiCallBegan({
+//   url,
+//   onStart: bugsRequested.type,
+//   onSuccess: bugsReceived.type,
+//   onError: bugsRequestFailed.type,
+// })
 //whithout extraction would be bugslice.actions.bugsReceived.type,
+// make this function returns a function (we can have access to the state)
+// () => fn(dispatch, getState) --> will be returned
+
+export const loadBugs = () => (dispatch, getState) => {
+  // getState.entities.bugs.lastFetch
+  const {lastFetch} = getState().entities.bugs;
+
+  const diffInMin = moment().diff(moment(lastFetch), 'minutes')
+
+  // if it has been 10 min since the last fetch dont fetch anymore
+  if (diffInMin < 10) return;
+
+  // in order to start the work flow we need to
+  // explicitly call this action, otherwise nothing will happen
+  dispatch(apiCallBegan({
+    url,
+    onStart: bugsRequested.type,
+    onSuccess: bugsReceived.type,
+    onError: bugsRequestFailed.type,
+  }));
+}
 
 // Memoization, so only if something hs changed
 export const getUnresolvedBugs = createSelector(
